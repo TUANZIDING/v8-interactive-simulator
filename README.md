@@ -4,6 +4,19 @@
 
 **在线演示：https://TUANZIDING.github.io/v8-interactive-simulator/**
 
+## 哨兵机器人 / Sentinel
+
+**[在线体验哨兵机器人](https://tuanziding.github.io/v8-interactive-simulator/sentinel.html)**
+
+受《黑客帝国》哨兵造型启发的程序化 3D 同人演示，非官方模型或电影资产。十条机械触手共 240 个链节，九枚红色光学镜头，分层装甲与发光核心。
+
+- 巡航、搜索、收拢三种运动模式，速度和展开幅度可调。
+- 爆炸拆解、透视、头部 / 核心 / 单条触手隔离。
+- 四个相机预设、自由旋转缩放、自动巡览、暂停和简洁视图。
+- 末端位移与弯曲代理值直接从触手链节点计算；单位为概念模型单位，不代表真实物理测量。
+- 生成文件：`docs/sentinel.html`；源码：`teardown/sims/sentinel-live/main.js`。
+- 运行 `node publish-build.mjs` 同时构建两套演示；`node preview-site.mjs` 在端口 4174 预览。
+
 ![V8 单缸剖切](previews/v8-section.jpg)
 
 ## 打开

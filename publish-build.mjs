@@ -1,7 +1,7 @@
 import {execFileSync} from 'node:child_process';
 import {mkdir, readFile, writeFile, copyFile} from 'node:fs/promises';
 const root = new URL('./', import.meta.url);
-execFileSync(process.execPath, ['sims/build.mjs', 'v8-live'], {cwd: new URL('teardown/', root), stdio: 'inherit'});
+execFileSync(process.execPath, ['sims/build.mjs', 'v8-live', 'sentinel-live'], {cwd: new URL('teardown/', root), stdio: 'inherit'});
 await mkdir(new URL('docs/', root), {recursive: true});
 const licenses = [
   ['teardown/LICENSE', 'teardown / claude-motion'],
@@ -14,6 +14,9 @@ let html = await readFile(new URL('teardown/teardown-out/dist/v8-live.html', roo
 html = html.replace('<title>v8-live</title>', '<title>V8 · Interactive Four-Stroke Simulator</title>');
 html = html.replace('<head>', `<head>\n<!--\n${notices.replaceAll('--', '—')}\n-->`);
 await writeFile(new URL('docs/index.html', root), html);
+let sentinel = await readFile(new URL('teardown/teardown-out/dist/sentinel-live.html', root), 'utf8');
+sentinel = sentinel.replace('<title>sentinel-live</title>', '<title>SENTINEL · 哨兵机械档案</title>').replace('<head>', `<head>\n<!--\n${notices.replaceAll('--', '—')}\n-->`);
+await writeFile(new URL('docs/sentinel.html', root), sentinel);
 await writeFile(new URL('docs/THIRD-PARTY-NOTICES.txt', root), notices);
 await writeFile(new URL('docs/.nojekyll', root), '');
 await copyFile(new URL('teardown/LICENSE', root), new URL('LICENSE', root));
