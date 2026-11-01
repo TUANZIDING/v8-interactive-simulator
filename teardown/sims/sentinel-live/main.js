@@ -1,3 +1,4 @@
+import {createSentinel} from './model.js';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
@@ -7,7 +8,7 @@ app.innerHTML=`<canvas id="scene"></canvas>
 <header><a href="./index.html" class="back">← V8 LAB</a><div class="brand">MACHINE ARCHIVE <span> / 02</span></div><span class="live"><i></i> SYSTEM ONLINE</span></header>
 <section class="title"><div class="eyebrow">AUTONOMOUS MACHINE · INTERACTIVE STUDY</div><h1>SENTINEL<span>哨兵</span></h1><p>机械触手 / 光学阵列 / 核心反应堆</p></section>
 <aside class="left panel"><div class="label">01 / MOTION CONTROL</div><div class="modes"><button data-mode="patrol" class="active">巡航</button><button data-mode="hunt">搜索</button><button data-mode="coil">收拢</button></div><label>运动速度 <output id="speedText">1.0×</output><input id="speed" aria-label="运动速度" type="range" min="0" max="2" step="0.05" value="1"></label><label>触手展开 <output id="spreadText">65%</output><input id="spread" aria-label="触手展开" type="range" min="0.1" max="1" step="0.01" value="0.65"></label><label>爆炸拆解 <output id="explodeText">0%</output><input id="explode" aria-label="爆炸拆解" type="range" min="0" max="1" step="0.01" value="0"></label><div class="row"><button id="pause">Ⅱ 暂停</button><button id="reset">↺ 重置</button></div><div class="divider"></div><div class="label">02 / INSPECTION</div><div class="parts"><button data-part="all" class="active">完整机体</button><button data-part="head">光学头部</button><button data-part="core">动力核心</button><button data-part="arm">触手 01</button></div><div class="row"><button id="xray">透视 OFF</button><button id="tour" class="active">自动巡览 ON</button></div></aside>
-<aside class="right panel"><div class="label">03 / LIVE KINEMATICS</div><div class="metric"><span>触手 01 · 末端位移</span><strong id="reach">0.00<small> u</small></strong></div><svg id="trace" viewBox="0 0 220 64"><path id="tracePath" fill="none" stroke="#b7ef8a" stroke-width="1.5"/></svg><div class="stats"><div>链节数量 <b>10 × 24</b></div><div>弯曲代理值 <b id="bend">0.00</b></div><div>运动相位 <b id="phase">0°</b></div><div>渲染帧率 <b id="fps">—</b></div></div><div class="divider"></div><div class="label">OPTICAL ARRAY</div><div class="eyes">${Array.from({length:9},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div><p class="note">概念运动学演示<br>参数与曲线由当前姿态计算，<br>不代表电影官方工程设定。</p></aside>
+<aside class="right panel"><div class="label">03 / LIVE KINEMATICS</div><div class="metric"><span>触手 01 · 末端位移</span><strong id="reach">0.00<small> u</small></strong></div><svg id="trace" viewBox="0 0 220 64"><path id="tracePath" fill="none" stroke="#b7ef8a" stroke-width="1.5"/></svg><div class="stats"><div>链节数量 <b>10 × 40</b></div><div>弯曲代理值 <b id="bend">0.00</b></div><div>运动相位 <b id="phase">0°</b></div><div>渲染帧率 <b id="fps">—</b></div></div><div class="divider"></div><div class="label">OPTICAL ARRAY</div><div class="eyes">${Array.from({length:13},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div><p class="note">概念运动学演示<br>参数与曲线由当前姿态计算，<br>不代表电影官方工程设定。</p></aside>
 <div class="views"><span>VIEW</span><button data-view="hero" class="active">三分之四</button><button data-view="front">正面</button><button data-view="side">侧面</button><button data-view="top">俯视</button></div>
 <div class="caption"><span id="captionNo">01 — PATROL</span><span id="captionText">十条分节机械触手 · 相位驱动运动</span></div>
 <footer><span><i></i> THE MACHINE WORLD / FAN STUDY</span><span>拖动旋转 · 滚轮缩放 · 空格暂停 · H 隐藏面板</span><button id="hud">简洁视图</button></footer><div id="error" hidden></div>`;
@@ -20,35 +21,21 @@ try{renderer=new THREE.WebGLRenderer({canvas:document.querySelector('#scene'),an
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#0c1411');scene.fog=new THREE.FogExp2('#0c1411',.025);
 const pmrem=new THREE.PMREMGenerator(renderer);const room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.04).texture;room.dispose();pmrem.dispose();
-const camera=new THREE.PerspectiveCamera(39,1,.1,100);camera.position.set(9,6,16);
+const camera=new THREE.PerspectiveCamera(39,1,.1,100);camera.position.set(10,6,18);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(0,.1,0);controls.minDistance=5;controls.maxDistance=26;controls.maxPolarAngle=Math.PI*.87;
 scene.add(new THREE.HemisphereLight(0xbdd7ca,0x151d18,2));
 function light(color,power,x,y,z){const l=new THREE.DirectionalLight(color,power);l.position.set(x,y,z);scene.add(l);return l;}
-const key=light(0xc8e3d6,4,4,9,6);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-9,right:9,top:9,bottom:-9});key.shadow.bias=-.001;
-light(0x8caf98,3,-7,3,-5);light(0xffb2a3,1,1,0,7);
+const key=light(0xd5e1df,3.2,4,9,6);key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-9,right:9,top:9,bottom:-9});key.shadow.bias=-.001;
+light(0x9bbac5,3.5,-7,3,-5);light(0xffb2a3,1,1,0,7);
 const mat=(color,metalness=.75,roughness=.36)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
-const steel=mat('#62736c'),dark=mat('#202b28'),armor=mat('#3e4b45'),edge=mat('#a1aea2',.85,.3),black=mat('#111c18',.3,.55),red=new THREE.MeshBasicMaterial({color:'#ff251b',toneMapped:false}),green=new THREE.MeshStandardMaterial({color:'#b4f8a3',emissive:'#75e59f',emissiveIntensity:2});
-const body=new THREE.Group();scene.add(body);const head=new THREE.Group(),core=new THREE.Group(),shell=new THREE.Group();body.add(head,core,shell);
-const sphereGeo=new THREE.SphereGeometry(1,28,20),cylGeo=new THREE.CylinderGeometry(1,1,1,12),linkGeo=new THREE.CylinderGeometry(.12,.15,1,10),jointGeo=new THREE.SphereGeometry(.145,10,8);
-function mesh(geo,material,parent,pos=[0,0,0],scale=[1,1,1]){const o=new THREE.Mesh(geo,material);o.position.set(...pos);o.scale.set(...scale);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
-function ball(parent,m,pos,scale){return mesh(sphereGeo,m,parent,pos,scale);}
-function tube(parent,m,a,b,r=.06){const aa=new THREE.Vector3(...a),bb=new THREE.Vector3(...b);const o=mesh(cylGeo,m,parent,aa.clone().add(bb).multiplyScalar(.5).toArray(),[r,aa.distanceTo(bb),r]);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),bb.sub(aa).normalize());return o;}
-ball(core,dark,[0,0,-.1],[.55,.4,1.8]);ball(core,green,[0,0,.1],[.53,.5,1]);
-for(let i=0;i<11;i++){const z=-1.6+i*.28;const r=.72*Math.sqrt(Math.max(.1,1-(z/2.1)**2));const ring=mesh(new THREE.TorusGeometry(r,.075,8,36),steel,core,[0,0,z],[1.25,1,1]);}
-const plates=[];for(let side of [-1,1])for(let i=0;i<5;i++){const p=ball(shell,armor,[side*.56,.36,-1.2+i*.49],[.62,.57,.4]);p.rotation.z=side*-.35;plates.push({p,base:p.position.clone(),side});for(let k=0;k<3;k++)tube(shell,edge,[side*.66,.76,-1.4+i*.49+k*.08],[side*.92,.35,-1.4+i*.49+k*.08],.025);}
-ball(head,armor,[0,0,1.18],[1.13,.85,.82]);ball(head,black,[0,-.02,1.77],[.94,.7,.26]);
-const eyeSpecs=[[0,.18,.26],[-.43,.28,.18],[.43,.28,.18],[-.74,.12,.12],[.74,.12,.12],[-.29,-.24,.17],[.29,-.24,.17],[-.59,-.34,.11],[.59,-.34,.11]];
-for(const [x,y,r] of eyeSpecs){const z=1.94-.18*Math.abs(x);const housing=mesh(new THREE.CylinderGeometry(r*1.35,r*1.45,.22,20),edge,head,[x,y,z]);housing.rotation.x=Math.PI/2;const rim=mesh(new THREE.TorusGeometry(r*1.03,.035,8,24),dark,head,[x,y,z+.13]);ball(head,red,[x,y,z+.14],[r,r,.085]);ball(head,new THREE.MeshBasicMaterial({color:0xffcc9f}),[x-r*.2,y+r*.2,z+.214],[r*.18,r*.18,.013]);}
-for(let s of [-1,1]){tube(head,steel,[s*.8,-.4,1.4],[s*1.15,-.85,1.9],.1);tube(head,edge,[s*1.15,-.85,1.9],[s*.42,-1.05,2.1],.065);tube(head,dark,[s*.42,-1.05,2.1],[s*.25,-.68,2.3],.035);}
-const eyeLight=new THREE.PointLight(0xff2710,3,5);eyeLight.position.set(0,0,2.6);head.add(eyeLight);
-const arms=[];const N=24;
-for(let i=0;i<10;i++){const group=new THREE.Group();body.add(group);const links=new THREE.InstancedMesh(linkGeo,i===0?edge:steel,N),joints=new THREE.InstancedMesh(jointGeo,dark,N+1);links.castShadow=true;links.receiveShadow=true;joints.castShadow=true;group.add(links,joints);const claw=new THREE.Group();group.add(claw);for(let k=0;k<3;k++){const a=k*Math.PI*2/3;const p=[Math.cos(a)*.17,.2,Math.sin(a)*.17],q=[Math.cos(a)*.28,.43,Math.sin(a)*.28],r=[Math.cos(a)*.07,.65,Math.sin(a)*.07];tube(claw,edge,p,q,.055);tube(claw,steel,q,r,.035);}arms.push({group,links,joints,claw,points:[],angle:i*Math.PI*2/10});}
-const floor=mesh(new THREE.PlaneGeometry(200,200),mat('#101b16',.15,.86),scene,[0,-4.3,0]);floor.rotation.x=-Math.PI/2;floor.castShadow=false;
-const grid=new THREE.GridHelper(60,60,0x344b3c,0x1a2b20);grid.position.y=-4.27;scene.add(grid);
-for(let r of [3.5,5.8]){const ring=mesh(new THREE.TorusGeometry(r,.008,4,100),mat('#42543b',.1,.7),scene,[0,-4.25,0]);ring.rotation.x=Math.PI/2;}
+const model=createSentinel(scene);const {armor,arms,N}=model;
+function mesh(geo,material,parent,pos=[0,0,0],scale=[1,1,1]){const o=new THREE.Mesh(geo,material);o.position.set(...pos);o.scale.set(...scale);o.receiveShadow=true;parent.add(o);return o;}
+const floor=mesh(new THREE.PlaneGeometry(200,200),mat('#101b16',.15,.86),scene,[0,-6.3,0]);floor.rotation.x=-Math.PI/2;floor.castShadow=false;
+const grid=new THREE.GridHelper(60,60,0x344b3c,0x1a2b20);grid.position.y=-6.27;scene.add(grid);
+for(let r of [3.5,5.8]){const ring=mesh(new THREE.TorusGeometry(r,.008,4,100),mat('#42543b',.1,.7),scene,[0,-6.25,0]);ring.rotation.x=Math.PI/2;}
 const stars=new Float32Array(450);for(let i=0;i<450;i++)stars[i]=(Math.sin(i*127.1+13)*.5+.5)*40-20;const dg=new THREE.BufferGeometry();dg.setAttribute('position',new THREE.BufferAttribute(stars,3));scene.add(new THREE.Points(dg,new THREE.PointsMaterial({size:.027,color:0x8dae8b,transparent:true,opacity:.25})));
 const state={speed:1,spread:.65,explode:0,mode:'patrol',part:'all',paused:false,xray:false,tour:true,t:0};
-const dummy=new THREE.Object3D(),up=new THREE.Vector3(0,1,0),delta=new THREE.Vector3();let lastInteraction=performance.now(),tourStep=-1;
+const smooth={spread:.65,hunt:0,coil:0,explode:0};let lastInteraction=performance.now(),tourStep=-1;
 function setActive(selector,key,value){document.querySelectorAll(selector).forEach(b=>b.classList.toggle('active',b.dataset[key]===value));}
 function manual(){lastInteraction=performance.now();state.tour=false;document.querySelector('#tour').textContent='自动巡览 OFF';document.querySelector('#tour').classList.remove('active');}
 function setPart(part){state.part=part;setActive('[data-part]','part',part);}
@@ -57,7 +44,7 @@ for(const id of ['speed','spread','explode'])document.querySelector('#'+id).addE
 function updateLabels(){for(const id of ['speed','spread','explode']){document.querySelector('#'+id).value=state[id];document.querySelector('#'+id+'Text').textContent=id==='speed'?state[id].toFixed(1)+'×':Math.round(state[id]*100)+'%';}}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{manual();setMode(b.dataset.mode);});document.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{manual();setPart(b.dataset.part);});
 function pause(){manual();state.paused=!state.paused;document.querySelector('#pause').textContent=state.paused?'▶ 继续':'Ⅱ 暂停';}document.querySelector('#pause').onclick=pause;
-const views={hero:[9,6,16],front:[0,2,19],side:[19,3,0],top:[.01,20,.01]};let camTarget=null;
+const views={hero:[10,6,18],front:[0,2,19],side:[19,3,0],top:[.01,20,.01]};let camTarget=null;
 function view(name){camTarget=new THREE.Vector3(...views[name]);setActive('[data-view]','view',name);}document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{manual();view(b.dataset.view);});
 document.querySelector('#xray').onclick=()=>{manual();state.xray=!state.xray;document.querySelector('#xray').textContent='透视 '+(state.xray?'ON':'OFF');document.querySelector('#xray').classList.toggle('active',state.xray);armor.transparent=state.xray;armor.opacity=state.xray?.18:1;armor.depthWrite=!state.xray;armor.needsUpdate=true;};
 document.querySelector('#tour').onclick=()=>{state.tour=!state.tour;tourStep=-1;lastInteraction=performance.now();document.querySelector('#tour').textContent='自动巡览 '+(state.tour?'ON':'OFF');document.querySelector('#tour').classList.toggle('active',state.tour);};
@@ -68,12 +55,10 @@ function resize(){const w=innerWidth,h=innerWidth<=550?innerHeight*.46:innerHeig
 const history=[];let last=performance.now(),lastUI=0,frameCount=0,fpsTime=last,frames=0;
 function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.06);last=now;if(!state.paused)state.t+=dt*state.speed;const t=state.t;
 if(state.tour){const step=Math.floor((now-lastInteraction)/6500)%5;if(step!==tourStep){tourStep=step;setPart(step===3?'arm':step===4?'core':'all');setMode(step===1?'hunt':step===2?'coil':'patrol');state.explode=step===4?.65:0;view(step===2?'front':'hero');updateLabels();}if(!camTarget)controls.autoRotate=true;}else controls.autoRotate=false;controls.autoRotateSpeed=.35;if(camTarget){camera.position.lerp(camTarget,1-Math.exp(-dt*3));if(camera.position.distanceTo(camTarget)<.04)camTarget=null;}controls.update();
-body.position.y=Math.sin(t*.7)*.18;body.rotation.y=Math.sin(t*.23)*.08;body.rotation.z=Math.sin(t*.4)*.035;
-head.position.z=state.explode*1.7;shell.position.y=state.explode*1.6;plates.forEach(({p,base,side})=>p.position.copy(base).add(new THREE.Vector3(side*state.explode*.65,0,0)));
-head.visible=state.part==='all'||state.part==='head';core.visible=state.part==='all'||state.part==='core';shell.visible=state.part==='all';
+const blend=1-Math.exp(-dt*2.8);smooth.spread+=(state.spread-smooth.spread)*blend;smooth.explode+=(state.explode-smooth.explode)*blend;
+if(!state.paused){smooth.hunt+=((state.mode==='hunt'?1:0)-smooth.hunt)*blend;smooth.coil+=((state.mode==='coil'?1:0)-smooth.coil)*blend;}
+model.update(t,smooth.spread,smooth.hunt,smooth.coil,smooth.explode,state.part);
 let bend=0;
-for(let i=0;i<arms.length;i++){const a=arms[i],angle=a.angle;a.group.visible=state.part==='all'||(state.part==='arm'&&i===0);a.group.position.set(state.part==='arm'?-2.5:0,0,state.part==='arm'?1.5:0);a.points.length=0;const spread=state.spread*(state.mode==='coil'?.45:1);for(let j=0;j<=N;j++){const u=j/N;const wave=Math.sin(u*6-t*(state.mode==='hunt'?2:1)+i*.72);const r=1+u*(2.7+spread*2)+Math.sin(u*Math.PI)*.5;const turn=angle+u*u*(state.mode==='coil'?2.2:.3)+wave*u*.22;const z=-.8-u*2.8+Math.sin(u*4-t+i)*u*.65+(state.mode==='hunt'?Math.sin(u*Math.PI)*1.4:0);const p=new THREE.Vector3(Math.cos(turn)*r,Math.sin(turn)*r*.72,z);p.x+=Math.cos(angle)*state.explode*.9;p.y+=Math.sin(angle)*state.explode*.9;a.points.push(p);dummy.position.copy(p);dummy.quaternion.identity();dummy.scale.setScalar(1-u*.65);dummy.updateMatrix();a.joints.setMatrixAt(j,dummy.matrix);if(j>0){const prev=a.points[j-1];delta.copy(p).sub(prev);dummy.position.copy(prev).add(p).multiplyScalar(.5);dummy.quaternion.setFromUnitVectors(up,delta.clone().normalize());const width=1-u*.68;dummy.scale.set(width,delta.length()*.91,width);dummy.updateMatrix();a.links.setMatrixAt(j-1,dummy.matrix);}}
-a.links.instanceMatrix.needsUpdate=true;a.joints.instanceMatrix.needsUpdate=true;a.links.computeBoundingSphere();a.joints.computeBoundingSphere();a.claw.position.copy(a.points[N]);a.claw.quaternion.setFromUnitVectors(up,a.points[N].clone().sub(a.points[N-1]).normalize());a.claw.scale.setScalar(.65);}
 renderer.render(scene,camera);frameCount++;frames++;if(now-fpsTime>1000){document.querySelector('#fps').textContent=Math.round(frames*1000/(now-fpsTime))+' FPS';frames=0;fpsTime=now;if(frameCount>90&&dt>.04&&renderer.getPixelRatio()>1)renderer.setPixelRatio(1);}
 if(now-lastUI>100){lastUI=now;const pts=arms[0].points;const reach=pts[N].distanceTo(pts[0]);for(let j=1;j<N;j++){const v1=pts[j].clone().sub(pts[j-1]).normalize(),v2=pts[j+1].clone().sub(pts[j]).normalize();bend+=v1.angleTo(v2);}document.querySelector('#reach').innerHTML=reach.toFixed(2)+'<small> u</small>';document.querySelector('#bend').textContent=bend.toFixed(2)+' rad';document.querySelector('#phase').textContent=Math.round((t%(Math.PI*2))/(Math.PI*2)*360)+'°';history.push(reach);if(history.length>80)history.shift();document.querySelector('#tracePath').setAttribute('d',history.map((v,i)=>(i?'L':'M')+(i*220/79).toFixed(1)+','+(60-(v-2)*10).toFixed(1)).join(' '));}}
 requestAnimationFrame(frame);
