@@ -24,3 +24,11 @@ export function armPose(i,t,spread,hunt,coil,explode=0){
  }
  return points;
 }
+
+// The skull faces +Z; heading follows the path tangent rather than camera direction.
+export function cruisePose(t){
+ const a=t*.38-Math.PI/2;
+ return {position:[1.7*Math.sin(a),.32*Math.sin(a*2),1.25*Math.cos(a)],
+ heading:Math.atan2(1.7*Math.cos(a),-1.25*Math.sin(a)),
+ pitch:-.09*Math.cos(a*2),bank:-.14};
+}

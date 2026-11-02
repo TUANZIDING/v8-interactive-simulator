@@ -19,3 +19,13 @@ for(let i=0;i<10;i++)for(const coil of [0,.5,1])for(const hunt of [0,1])for(cons
  for(let j=1;j<points.length;j++)for(let k=0;k<3;k++)assert.ok(Math.abs((exploded[j][k]-points[j][k])-(exploded[0][k]-points[0][k]))<1e-10,'Exploding an arm must rigidly translate its chain');
 }
 console.log({maximumLengthError,maximumFrameDisplacement,cases:480});
+const {cruisePose}=await import('./motion.js');
+for(const t of [0,2,5,10,30]){
+ const p=cruisePose(t),next=cruisePose(t+.0001);
+ const dx=next.position[0]-p.position[0],dz=next.position[2]-p.position[2];
+ const heading=Math.atan2(dx,dz);
+ assert.ok(Math.abs(Math.sin(heading-p.heading))<.001,'Heading follows the route tangent');
+ assert.deepEqual(p,cruisePose(t),'Frozen time freezes navigation');
+}
+assert.ok(Math.hypot(...cruisePose(4).position.map((v,i)=>v-cruisePose(0).position[i]))>1,'Cruise must visibly translate the body');
+console.log('Cruise translation, heading and frozen-time checks passed');

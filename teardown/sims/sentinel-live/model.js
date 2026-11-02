@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {SEGMENTS as N,armPose} from './motion.js';
+import {SEGMENTS as N,armPose,cruisePose} from './motion.js';
 export function createSentinel(scene){
  const metal=(c,r=.4)=>new THREE.MeshStandardMaterial({color:c,metalness:.88,roughness:r});
  // Deterministic fine machining texture, shared by all structural metals.
@@ -63,8 +63,17 @@ export function createSentinel(scene){
  const dummy=new THREE.Object3D(),direction=new THREE.Vector3(),q=new THREE.Quaternion(),offset=new THREE.Vector3();
  function instance(inst,index,pos,rotation,scale){dummy.position.copy(pos);dummy.quaternion.copy(rotation);dummy.scale.set(...scale);dummy.updateMatrix();inst.setMatrixAt(index,dummy.matrix);}
  const identity=new THREE.Quaternion();
- function update(t,spread,hunt,coil,explode,part){
-  body.position.set(Math.sin(t*.21)*.09,Math.sin(t*.52)*.13,0);body.rotation.set(Math.sin(t*.31)*.035,Math.sin(t*.22)*.11,Math.sin(t*.43)*.025);
+ const targetPosition=new THREE.Vector3(),targetRotation=new THREE.Quaternion(),targetEuler=new THREE.Euler();
+ function update(t,spread,hunt,coil,explode,part,dt){
+  const cruise=cruisePose(t);
+  const travel=part==='all'?Math.max(0,1-Math.max(hunt,coil,explode*3)):0;
+  targetPosition.set(...cruise.position).multiplyScalar(travel);
+  targetPosition.y+=Math.sin(t*.52)*.13;
+  targetEuler.set(cruise.pitch,cruise.heading,cruise.bank);
+  targetRotation.setFromEuler(targetEuler);
+  if(travel<.99)targetRotation.slerp(new THREE.Quaternion(),1-travel);
+  const ease=1-Math.exp(-dt*2.5);
+  body.position.lerp(targetPosition,ease);body.quaternion.slerp(targetRotation,ease);
   head.position.z=explode*1.7;shell.position.y=explode*1.5;plates.forEach(({p,base,side})=>{p.position.copy(base);p.position.x+=side*explode*.7;});
   head.visible=part==='all'||part==='head';core.visible=part==='all'||part==='core';shell.visible=part==='all';
   for(let i=0;i<10;i++){
