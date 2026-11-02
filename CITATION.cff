@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "Please cite this project and retain upstream attribution."
+title: "Machine Archive: V8 and Sentinel interactive 3D studies"
+version: 1.0.0
+date-released: 2026-11-02
+authors:
+  - name: "TUANZIDING"
+repository-code: "https://github.com/TUANZIDING/v8-interactive-simulator"
+license: MIT
